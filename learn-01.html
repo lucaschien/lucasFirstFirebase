@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <META HTTP-EQUIV="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1.0, user-scalable=0">
+    <META HTTP-EQUIV="pragma" CONTENT="no-cache">
+    <META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
+    <META HTTP-EQUIV="expires" CONTENT="0">
+    <title>Lucas first firebase</title>
+    <link href="./css/style.css" rel="stylesheet">
+    <!-- 引用官方的firebase物件 -->
+    <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+      integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+      crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <a href="./index.html">Home</a>
+    <div class="learn-01">
+      <div>
+        這是第1個實驗 firebase - Realtime Database
+      </div>
+
+      <h2>當前db中的資料</h2>
+      <div id="dbData-area"></div>
+
+      <div class="URUD-box" id="set-area">
+        <h3>set 新增資料</h3>
+        要變更的節點 <input type="text" placeholder="限制輸入從根節點開始的路徑,如:/a/b">
+        要變更的資料 <textarea placeholder='限制輸入josn格式,如{"a":"123"}'></textarea>
+        <button>送出</button>
+      </div>
+
+      <div class="URUD-box" id="push-area">
+        <h3>push 新增資料</h3>
+        要變更的節點 <input type="text" placeholder="限制輸入從根節點開始的路徑,如:/a/b">
+        要變更的資料 <textarea placeholder='限制輸入josn格式,如{"a":"123"}'></textarea>
+        <button>送出</button>
+      </div>
+
+      <div class="URUD-box" id="update-area">
+        <h3>update 更新資料</h3>
+        要變更的節點 <input type="text" placeholder="限制輸入從根節點開始的路徑,如:/a/b">
+        要變更的資料 <textarea placeholder='限制輸入josn格式,如{"a":"123"}'></textarea>
+        <button>送出</button>
+        <button id="useSet">改用set的發法更新</button>
+      </div>
+
+      <div class="URUD-box" id="remove-area">
+        <h3>remove 刪除資料</h3>
+        要變更的節點 <input type="text" placeholder="限制輸入從根節點開始的路徑,如:/a/b">
+        <button>送出</button>
+      </div>
+
+    </div>
+    <script>
+      // 教學來源: https://www.oxxostudio.tw/articles/201904/firebase-realtime-database-start.html      
+      ((window, document) => {
+        var dbData = {};
+
+        // firebase 物件初始化
+        firebase.initializeApp({
+          databaseURL: "https://lucasfirstfirebase.firebaseio.com/"  // 指定 db 連線位置
+        });
+        // 初始化 database 物件
+        var database = firebase.database();
+
+        // 以下實驗DB的CRUD  ref('/') 意思是要參考到的節點位置
+
+        /* ● 新增資料 set 方式
+            注意這種新增資料會將同層的資料完全覆蓋掉, 所以要新增的時後要指定collection的某一個keyname
+            比如在資料庫的根目錄下原本的資料結構是
+            {
+              a: '嘿嘿嘿'
+            }
+            被 database.ref('/')set({bbbb: 123}) 之後, 根目錄下的資料結構會變成
+            {
+              b: 123
+            }
+            原本的a就不見蛋了
+        */
+        //database.ref('/aaa').set('啦啦啦');
+
+        /* ● 新加資料 push 方式
+            注意這種新增資料的方式不會將同層的資料完全覆蓋,除非遇到有相同的keyname
+            並且如果push的節點已經有資料了的話, 會自動產生一個隨機的keyname節點去紀錄值
+        */
+        //database.ref('/bbb').push('b');
+        //database.ref('/ccc').push('c');
+
+        // ● 修改資料
+        //database.ref('/').update({aaa: '呼呼呼呼呼'}); //注意這不是 push 到aaa節點而是在根節點push一筆資料的意思
+
+        // ● 刪除資料
+        //database.ref('/ccc').remove();
+  
+        // ● 讀取資料, 方式有兩種，分別是：只讀取一次 once 和即時讀取 on
+        // 'value'固定使用此字串,還不知道能用哪些字串
+        //database.ref('/').once('value', (e) => {
+        //  console.log('once::::', e.val());
+        //});
+        database.ref('/').on('value', (e) => {
+          console.log('on::::', e.val()); //發現: firebase是用websocket的方式傳輸資料
+          dbData = e.val();
+          $('#dbData-area').html(JSON.stringify(dbData));
+        });
+        
+
+        // 以下額外自己實驗用此檔案是否可以放到github的page去做firebase的db操作
+        $('#set-area').on('click', 'button', function(e) {
+          var path = $(this).parent('div').find('input').val();
+          var val = $(this).parent('div').find('textarea').val();
+          val = JSON.parse(val);
+          database.ref(path).set(val);
+        });
+        $('#push-area').on('click', 'button', function(e) {
+          var path = $(this).parent('div').find('input').val();
+          var val = $(this).parent('div').find('textarea').val();
+          val = JSON.parse(val);
+          database.ref(path).push(val);
+        });
+        $('#update-area').on('click', 'button', function(e) {
+          var path = $(this).parent('div').find('input').val();
+          var val = $(this).parent('div').find('textarea').val();
+          val = JSON.parse(val);
+          // 是否要改用set的方式更新
+          if ($(this).attr('id') === 'useSet') {
+            database.ref(path).set(val);
+          } else {
+            database.ref(path).update(val);
+          }
+        });
+        $('#remove-area').on('click', 'button', function(e) {
+          var path = $(this).parent('div').find('input').val();
+          database.ref(path).remove();
+        });
+
+      })(window, document);
+    </script>
+  </body>
+</html>

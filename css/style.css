@@ -5,22 +5,63 @@ body {
 body * {
   box-sizing: border-box;
 }
+a {
+  color: #78a2ee;
+}
 
-#dbData-area {
-  border: 1px solid rgb(177, 177, 177);
+/* index.html 使用的 */
+.index-area {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: baseline;
+}
+.index-area a {
+  color: #78a2ee;
+  border: 0px solid #78a2ee;
+  padding: 3px 6px;
+  text-decoration: none;
+}
+
+/* leran-01.html 使用的 */
+.learn-01 #dbData-area {
+  border: 2px dotted rgb(177, 177, 177);
   padding: 20px;
   margin: 10px 0;
 }
-
-.URUD-box {
-  background-color: rgb(233, 230, 230);
+.learn-01 .URUD-box {
+  background-color: #e9e6e6;
   display: inline-block;
+  vertical-align: top;
   width: calc(50% - 20px);
   padding: 15px;
-  margin: 5px;
+  margin: 8px 5px;
+  border-radius: 4px;
 }
-
-.URUD-box textarea {
+.learn-01 .URUD-box input[type="text"] {
+  padding: 5px 10px;
+  width: 100%;
+  margin: 5px 0;
+}
+.learn-01 .URUD-box textarea {
   width: 100%;
   height: 100px;
+}
+.learn-01 .URUD-box button {
+  padding: 8px 25px;
+  border: 0;
+  border-radius: 5px;
+  background-color: #78a2ee;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* leran-02.html 使用的 */
+.learn-02 #dbData-area{
+  text-align: left;
+  border: 1px solid #e9e6e6;
+  border-radius: 5px;
+  padding: 10px;
+  width: 50%;
+  margin: 0 auto;
 }

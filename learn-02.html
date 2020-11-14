@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <META HTTP-EQUIV="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1.0, user-scalable=0">
+    <META HTTP-EQUIV="pragma" CONTENT="no-cache">
+    <META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
+    <META HTTP-EQUIV="expires" CONTENT="0">
+    <title>Lucas first firebase</title>
+    <link href="./css/style.css" rel="stylesheet">
+    <!-- 引用官方的firebase物件 -->
+    <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-firestore.js"></script>
+
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+      integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+      crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <a href="./index.html">Home</a>
+    <div class="learn-02">
+      <div>
+        這是第2個實驗 firebase - Cloud Firestore
+      </div>
+      <h2>當前db中的資料</h2>
+      <button id="getAllDocBtn">取得當前 collection:products 的所有文件層級資料</button>
+      <pre id="dbData-area">--</pre>
+
+    </div>
+    <script>
+      // 教學來源: https://www.oxxostudio.tw/articles/201905/firebase-firestore.html
+      // 目前只知道 collection集合 與 document文件, 這樣兩層的結構, 可是從管理介面發現可以在document內又建立collection...就不知道該如何處理了
+
+      ((window, document) => {
+        // firebase 物件初始化
+        firebase.initializeApp({
+          projectId: "lucasfirstfirebase"  // 指定 firebase db id
+        });
+        // 初始化 database 物件
+        var db = firebase.firestore();
+
+        // 以下實驗DB的CRUD,  
+        //   db.collection('xxx') 指的是要參考到哪一個集合(哪一個資料夾)
+        //     .doc('xxx') 指的是要參考到哪一個文件
+        //   另外 firestroe 提供了merge的方法，幫助我們在寫入資料時不會完全覆蓋，而是進行合併整理
+
+        var docMobile = db.collection('products').doc('mobiles'); // 在 products 下的 mobile 文件
+
+        // ● 新增文件層級內的欄位資料
+        var nowData1 = {
+          andriod: {
+            htc: {
+              money: 2600
+            },
+            soney: {
+              money: 12000
+            },
+            sun: 14600
+          },
+          ios: {
+            iphone11: {
+              money: 19000
+            },
+            iphone12: {
+              money: 24000
+            },
+            sun: 43000
+          },
+          total: 57600
+        };
+        var nowData2 = {
+          ios: {
+            iphone12: {
+              money: 25000
+            },
+            sun: 44000
+          }
+        };
+        docMobile.set(nowData1).then(() => {
+          console.log('nowData1 已新增');
+        });
+        // 注意有設定 merge, 因此 nowData2 並不會將 nowData1 沒設定到的資料給清掉
+        docMobile.set(nowData2, {merge: true}).then(() => {
+          console.log('nowData2 已新增');
+        });
+
+        // ● 修改文件層級內的欄位資料, 要注意: 由於指定參考的文件只到 'mobiles', 而 update 會更新到下一層的節點 ios, 
+        //            因此如果我只寫 {ios:{iphone12: {money: 27000}}}; 會造成 iphone11 這一層的節點會被覆蓋掉
+        //            
+        var nowData3 = {
+          ios: {
+            iphone11: {
+              money: 29000
+            },
+            iphone12: {
+              money: 27000
+            },
+            sun: 56000
+          }
+        };
+        docMobile.update(nowData3).then(() => {
+          console.log('nowData3 修改資料已完成');
+        });
+
+        // ● 刪除文件層級內的欄位資料而不刪除文件
+        docMobile.set({aaa:111}, {merge: true});
+        docMobile.update({
+          aaa: firebase.firestore.FieldValue.delete()
+        }).then(() => {
+          console.log('已刪除文件中的aaa欄位');
+        });
+        
+        // ● 刪除文件層級資料
+        var testDoc = db.collection('products').doc('test'); //指定要新增的文件名稱為test
+        //先透過新增空欄位來建立一個文件
+        testDoc.set({}).then(() => {
+          console.log('文件層級資料test已建立');
+        });  
+        // 為了在firebase的站台那邊可以看到新增與刪除的過程, 用時間物件延遲刪除
+        setTimeout(() => {
+          //再將此文件刪除
+          testDoc.delete().then(() => {
+            console.log('文件層級資料test已刪除');
+          }); 
+        }, 3000);
+
+        // ● 讀取資料,教學文章有一段話" ( 子集合只能在後端讀取，無法在前端或 App 段實現 )" 我猜應該是集合中的集合的意思
+        // ● 讀取集合層級資料, 使用get方法(一次性)
+        db.collection('products').get().then((querySnapshot) => {
+          querySnapshot.forEach((item) => {
+            console.log('集合 > 文件:', item.id, item.data());
+          });
+        });
+        // ● 讀取文件層級資料, 使用get方法(一次性)
+        docMobile.get().then((doc) => {
+          console.log('文件:', doc.data());
+        });
+        // ● 讀取集合層級資料, 使用onSnapshot方法(有監聽資料異動)
+        db.collection('products').onSnapshot((querySnapshot) => {
+          querySnapshot.forEach((item) => {
+            console.log('onSnapshot集合層級資料有異動:', item.id, JSON.stringify(item.data()));
+          });
+        });
+        // ● 讀取文件層級資料, 使用onSnapshot方法(有監聽資料異動)
+        docMobile.onSnapshot((doc) => {
+          console.log('onSnapshot文件層級資料有異動:::::', JSON.stringify(doc.data()));
+        });
+
+        // ● 讀取集合層級資料, 加上使用 篩選 where   參考: https://firebase.google.com/docs/firestore/query-data/queries#web_7
+        // 為了能夠體會 where 的作用,新建立一個cars的文件
+        db.collection('products').doc('cars').set({
+          BMW: {
+            z3: {
+              money: 99999
+            },
+            sun: 99999
+          },
+          total: 99999
+        });
+        // 找出文件的欄位中 total 大於等於 60000 的文件
+        db.collection('products').where('total', '>=', 60000).get().then((querySnapshot) => {
+          querySnapshot.forEach((item) => {
+            console.log('篩選 where:', item.id, item.data());
+          });
+        });
+
+        // ● 讀取集合層級資料, 加上使用 排序 orderBy, asc遞增 desc遞減, limit(n)限定資料筆數
+        // 為了能夠體會 limit 的作用,先建立一堆文件
+        ['aaa', 'bbb', 'ccc'].forEach((item, i) => {
+          db.collection('products').doc(item).set({
+            mockProduct: {
+              version: {
+                money: (i+1)*1000
+              },
+              sun: (i+1)*1000
+            },
+            total: (i+1)*1000
+          });
+        });
+        db.collection('products').orderBy('total', 'asc').limit(4).get().then((querySnapshot) => {
+          querySnapshot.forEach((item) => {
+            console.log('排序 orderBy:', item.id, item.data());
+          });
+        });
+
+
+        $('#getAllDocBtn').click((event) => {
+          db.collection('products').get().then((querySnapshot) => {
+            let temp = {};
+            querySnapshot.forEach((item) => {
+              temp[item.id] = item.data();
+            });
+            console.log('temp', temp);
+            $('#dbData-area').html(JSON.stringify(temp, null, '\t'));
+          });
+        });
+
+      })(window, document);
+    </script>
+  </body>
+</html>
