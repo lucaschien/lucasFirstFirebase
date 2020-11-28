@@ -44,8 +44,8 @@
         <h3>update 更新資料</h3>
         要變更的節點 <input type="text" placeholder="限制輸入從根節點開始的路徑,如:/a/b">
         要變更的資料 <textarea placeholder='限制輸入josn格式,如{"a":"123"}'></textarea>
-        <button>送出</button>
-        <button id="useSet">改用set的發法更新</button>
+        <button>送出(不會覆蓋其他欄位)</button>
+        <button id="useSet">改用set的發法更新(會覆蓋其他欄位)</button>
       </div>
 
       <div class="URUD-box" id="remove-area">
@@ -53,7 +53,13 @@
         要變更的節點 <input type="text" placeholder="限制輸入從根節點開始的路徑,如:/a/b">
         <button>送出</button>
       </div>
-
+      
+      <p style="text-align: left; font-size: 13px;">
+        發現: firebase 儲存更新的格式不支援陣列, 因此要將陣列轉成 {key:value的格式}, <br>
+        如 {"list": ["apple", "orange"]}, <br>
+        要轉成: {"list": {"0": "apple", "1": "orange"}}, <br>
+        但是 firebase 回吐出來時會自動轉成陣列...什麼鬼啊.
+      </p>
     </div>
     <script>
       // 教學來源: https://www.oxxostudio.tw/articles/201904/firebase-realtime-database-start.html      

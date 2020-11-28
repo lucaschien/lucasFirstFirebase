@@ -23,10 +23,27 @@
       <div>
         這是第2個實驗 firebase - Cloud Firestore
       </div>
-      <h2>當前db中的資料</h2>
-      <button id="getAllDocBtn">取得當前 collection:products 的所有文件層級資料</button>
-      <pre id="dbData-area">--</pre>
+      <div class="main">
+        <div class="left-area">
+          <h2>當前db中的資料</h2>
+          <button id="getAllDocBtn">取得當前 collection:products 的所有文件層級資料</button>
+          <pre id="dbData-area">--</pre>
+        </div>
+        <div class="right-area">
+          <section>
+            <h5>實驗新增或修改 book 文件中的欄位 (有設定merge)</h5>
+            <textarea placeholder="限定標準json格式"></textarea>
+            <button id="setBtn">送出</button>
+          </section>
 
+          <section>
+            <h5>實驗刪除 book 文件中的欄位</h5>
+            <input type="text" placeholder="指定要刪除的欄位名稱">
+            <button id="deleteBtn">送出</button>
+          </section>
+
+        </div>
+      </div>
     </div>
     <script>
       // 教學來源: https://www.oxxostudio.tw/articles/201905/firebase-firestore.html
@@ -185,16 +202,38 @@
         });
 
 
+        // event: 取得當前db中的資料
         $('#getAllDocBtn').click((event) => {
           db.collection('products').get().then((querySnapshot) => {
             let temp = {};
             querySnapshot.forEach((item) => {
               temp[item.id] = item.data();
             });
-            console.log('temp', temp);
+            // console.log('temp', temp);
             $('#dbData-area').html(JSON.stringify(temp, null, '\v\v'));
           });
         });
+
+
+        // 以下實驗針對 book 這個文件做欄位新增修改刪除練習
+        // event: 送出 set 新增與修改欄位 (有設定merge)
+        $('#setBtn').click((event) => {
+          var $textarea = $(event.target).prev();
+          var val = JSON.parse($textarea.val().replace(/\r\n|\n/g,""));
+          var docBook = db.collection('products').doc('book');
+          docBook.set(val, {merge: true});
+        });
+
+        // event: 送出 delete 刪除欄位
+        $('#deleteBtn').click((event) => {
+          var keyName = $(event.target).prev().val();
+          var docBook = db.collection('products').doc('book');
+          docBook.update({
+            [keyName]: firebase.firestore.FieldValue.delete()
+          });
+        });
+
+
 
       })(window, document);
     </script>

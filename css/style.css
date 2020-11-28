@@ -57,7 +57,17 @@ a {
 }
 
 /* leran-02.html 使用的 */
-.learn-02 #dbData-area{
+.learn-02 .main{
+  display: flex;
+  justify-content: space-around;
+  width: 800px;
+  margin: 0 auto;
+  border: 1px solid #ccc;
+}
+.learn-02 .left-area, .learn-02 .right-area {
+  flex: 0 0 50%;
+}
+.learn-02 .left-area #dbData-area{
   text-align: left;
   border: 1px solid #e9e6e6;
   border-radius: 5px;
@@ -67,4 +77,19 @@ a {
   min-width: 300px;
   margin: 10px auto;
   overflow: auto;
+}
+
+.learn-02 .right-area {
+  text-align: left;
+}
+.learn-02 .right-area section {
+  margin-top: 20px;
+}
+.learn-02 .right-area h5 {
+  margin: 0;
+}
+.learn-02 .right-area textarea {
+  width: 80%;
+  height: 100px;
+  vertical-align: top;
 }
