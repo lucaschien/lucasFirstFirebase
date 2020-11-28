@@ -65,7 +65,11 @@ a {
   border: 1px solid #ccc;
 }
 .learn-02 .left-area, .learn-02 .right-area {
-  flex: 0 0 50%;
+  flex: 0 0 calc(50% - 40px);
+  margin: 0 20px;
+}
+.learn-02 .left-area button {
+  width: 100%;
 }
 .learn-02 .left-area #dbData-area{
   text-align: left;
@@ -73,8 +77,7 @@ a {
   border-radius: 5px;
   padding: 10px;
   height: 50vh;
-  width: 30%;
-  min-width: 300px;
+  width: 100%;
   margin: 10px auto;
   overflow: auto;
 }

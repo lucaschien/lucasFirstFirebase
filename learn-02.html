@@ -26,18 +26,20 @@
       <div class="main">
         <div class="left-area">
           <h2>當前db中的資料</h2>
-          <button id="getAllDocBtn">取得當前 collection:products 的所有文件層級資料</button>
+          <button id="getProductsDocBtn">取得當前 collection:products 的所有文件層級資料</button>
+          <button id="getBooksDocBtn">取得當前 collection:books 的所有文件層級資料</button>
           <pre id="dbData-area">--</pre>
         </div>
         <div class="right-area">
+
           <section>
-            <h5>實驗新增或修改 book 文件中的欄位 (有設定merge)</h5>
+            <h5>實驗:新增或修改 books 資料夾中 adobe 文件中的欄位 (有設定merge)</h5>
             <textarea placeholder="限定標準json格式"></textarea>
             <button id="setBtn">送出</button>
           </section>
 
           <section>
-            <h5>實驗刪除 book 文件中的欄位</h5>
+            <h5>實驗:刪除 books 資料夾中 adobe 文件中的欄位</h5>
             <input type="text" placeholder="指定要刪除的欄位名稱">
             <button id="deleteBtn">送出</button>
           </section>
@@ -57,177 +59,188 @@
         // 初始化 database 物件
         var db = firebase.firestore();
 
-        // 以下實驗DB的CRUD,  
-        //   db.collection('xxx') 指的是要參考到哪一個集合(哪一個資料夾)
-        //     .doc('xxx') 指的是要參考到哪一個文件
-        //   另外 firestroe 提供了merge的方法，幫助我們在寫入資料時不會完全覆蓋，而是進行合併整理
+        /*
+          // 以下實驗DB的CRUD,  
+          //   db.collection('xxx') 指的是要參考到哪一個集合(哪一個資料夾)
+          //     .doc('xxx') 指的是要參考到哪一個文件
+          //   另外 firestroe 提供了merge的方法，幫助我們在寫入資料時不會完全覆蓋，而是進行合併整理
 
-        var docMobile = db.collection('products').doc('mobiles'); // 在 products 下的 mobile 文件
+          var docMobile = db.collection('products').doc('mobiles'); // 在 products 下的 mobile 文件
 
-        // ● 新增文件層級內的欄位資料
-        var nowData1 = {
-          andriod: {
-            htc: {
-              money: 2600
-            },
-            soney: {
-              money: 12000
-            },
-            sun: 14600
-          },
-          ios: {
-            iphone11: {
-              money: 19000
-            },
-            iphone12: {
-              money: 24000
-            },
-            sun: 43000
-          },
-          total: 57600
-        };
-        var nowData2 = {
-          ios: {
-            iphone12: {
-              money: 25000
-            },
-            sun: 44000
-          }
-        };
-        docMobile.set(nowData1).then(() => {
-          console.log('nowData1 已新增');
-        });
-        // 注意有設定 merge, 因此 nowData2 並不會將 nowData1 沒設定到的資料給清掉
-        docMobile.set(nowData2, {merge: true}).then(() => {
-          console.log('nowData2 已新增');
-        });
-
-        // ● 修改文件層級內的欄位資料, 要注意: 由於指定參考的文件只到 'mobiles', 而 update 會更新到下一層的節點 ios, 
-        //            因此如果我只寫 {ios:{iphone12: {money: 27000}}}; 會造成 iphone11 這一層的節點會被覆蓋掉
-        //            
-        var nowData3 = {
-          ios: {
-            iphone11: {
-              money: 29000
-            },
-            iphone12: {
-              money: 27000
-            },
-            sun: 56000
-          }
-        };
-        docMobile.update(nowData3).then(() => {
-          console.log('nowData3 修改資料已完成');
-        });
-
-        // ● 刪除文件層級內的欄位資料而不刪除文件
-        docMobile.set({aaa:111}, {merge: true});
-        docMobile.update({
-          aaa: firebase.firestore.FieldValue.delete()
-        }).then(() => {
-          console.log('已刪除文件中的aaa欄位');
-        });
-        
-        // ● 刪除文件層級資料
-        var testDoc = db.collection('products').doc('test'); //指定要新增的文件名稱為test
-        //先透過新增空欄位來建立一個文件
-        testDoc.set({}).then(() => {
-          console.log('文件層級資料test已建立');
-        });  
-        // 為了在firebase的站台那邊可以看到新增與刪除的過程, 用時間物件延遲刪除
-        setTimeout(() => {
-          //再將此文件刪除
-          testDoc.delete().then(() => {
-            console.log('文件層級資料test已刪除');
-          }); 
-        }, 3000);
-
-        // ● 讀取資料,教學文章有一段話" ( 子集合只能在後端讀取，無法在前端或 App 段實現 )" 我猜應該是集合中的集合的意思
-        // ● 讀取集合層級資料, 使用get方法(一次性)
-        db.collection('products').get().then((querySnapshot) => {
-          querySnapshot.forEach((item) => {
-            console.log('集合 > 文件:', item.id, item.data());
-          });
-        });
-        // ● 讀取文件層級資料, 使用get方法(一次性)
-        docMobile.get().then((doc) => {
-          console.log('文件:', doc.data());
-        });
-        // ● 讀取集合層級資料, 使用onSnapshot方法(有監聽資料異動)
-        db.collection('products').onSnapshot((querySnapshot) => {
-          querySnapshot.forEach((item) => {
-            console.log('onSnapshot集合層級資料有異動:', item.id, JSON.stringify(item.data()));
-          });
-        });
-        // ● 讀取文件層級資料, 使用onSnapshot方法(有監聽資料異動)
-        docMobile.onSnapshot((doc) => {
-          console.log('onSnapshot文件層級資料有異動:::::', JSON.stringify(doc.data()));
-        });
-
-        // ● 讀取集合層級資料, 加上使用 篩選 where   參考: https://firebase.google.com/docs/firestore/query-data/queries#web_7
-        // 為了能夠體會 where 的作用,新建立一個cars的文件
-        db.collection('products').doc('cars').set({
-          BMW: {
-            z3: {
-              money: 99999
-            },
-            sun: 99999
-          },
-          total: 99999
-        });
-        // 找出文件的欄位中 total 大於等於 60000 的文件
-        db.collection('products').where('total', '>=', 60000).get().then((querySnapshot) => {
-          querySnapshot.forEach((item) => {
-            console.log('篩選 where:', item.id, item.data());
-          });
-        });
-
-        // ● 讀取集合層級資料, 加上使用 排序 orderBy, asc遞增 desc遞減, limit(n)限定資料筆數
-        // 為了能夠體會 limit 的作用,先建立一堆文件
-        ['aaa', 'bbb', 'ccc'].forEach((item, i) => {
-          db.collection('products').doc(item).set({
-            mockProduct: {
-              version: {
-                money: (i+1)*1000
+          // ● 新增文件層級內的欄位資料
+          var nowData1 = {
+            andriod: {
+              htc: {
+                money: 2600
               },
-              sun: (i+1)*1000
+              soney: {
+                money: 12000
+              },
+              sun: 14600
             },
-            total: (i+1)*1000
+            ios: {
+              iphone11: {
+                money: 19000
+              },
+              iphone12: {
+                money: 24000
+              },
+              sun: 43000
+            },
+            total: 57600
+          };
+          var nowData2 = {
+            ios: {
+              iphone12: {
+                money: 25000
+              },
+              sun: 44000
+            }
+          };
+          docMobile.set(nowData1).then(() => {
+            console.log('nowData1 已新增');
           });
-        });
-        db.collection('products').orderBy('total', 'asc').limit(4).get().then((querySnapshot) => {
-          querySnapshot.forEach((item) => {
-            console.log('排序 orderBy:', item.id, item.data());
+          // 注意有設定 merge, 因此 nowData2 並不會將 nowData1 沒設定到的資料給清掉
+          docMobile.set(nowData2, {merge: true}).then(() => {
+            console.log('nowData2 已新增');
           });
-        });
 
+          // ● 修改文件層級內的欄位資料, 要注意: 由於指定參考的文件只到 'mobiles', 而 update 會更新到下一層的節點 ios, 
+          //            因此如果我只寫 {ios:{iphone12: {money: 27000}}}; 會造成 iphone11 這一層的節點會被覆蓋掉
+          //            
+          var nowData3 = {
+            ios: {
+              iphone11: {
+                money: 29000
+              },
+              iphone12: {
+                money: 27000
+              },
+              sun: 56000
+            }
+          };
+          docMobile.update(nowData3).then(() => {
+            console.log('nowData3 修改資料已完成');
+          });
 
-        // event: 取得當前db中的資料
-        $('#getAllDocBtn').click((event) => {
+          // ● 刪除文件層級內的欄位資料而不刪除文件
+          docMobile.set({aaa:111}, {merge: true});
+          docMobile.update({
+            aaa: firebase.firestore.FieldValue.delete()
+          }).then(() => {
+            console.log('已刪除文件中的aaa欄位');
+          });
+          
+          // ● 刪除文件層級資料
+          var testDoc = db.collection('products').doc('test'); //指定要新增的文件名稱為test
+          //先透過新增空欄位來建立一個文件
+          testDoc.set({}).then(() => {
+            console.log('文件層級資料test已建立');
+          });  
+          // 為了在firebase的站台那邊可以看到新增與刪除的過程, 用時間物件延遲刪除
+          setTimeout(() => {
+            //再將此文件刪除
+            testDoc.delete().then(() => {
+              console.log('文件層級資料test已刪除');
+            }); 
+          }, 3000);
+
+          // ● 讀取資料,教學文章有一段話" ( 子集合只能在後端讀取，無法在前端或 App 段實現 )" 我猜應該是集合中的集合的意思
+          // ● 讀取集合層級資料, 使用get方法(一次性)
           db.collection('products').get().then((querySnapshot) => {
-            let temp = {};
             querySnapshot.forEach((item) => {
-              temp[item.id] = item.data();
+              console.log('集合 > 文件:', item.id, item.data());
             });
-            // console.log('temp', temp);
-            $('#dbData-area').html(JSON.stringify(temp, null, '\v\v'));
+          });
+          // ● 讀取文件層級資料, 使用get方法(一次性)
+          docMobile.get().then((doc) => {
+            console.log('文件:', doc.data());
+          });
+          // ● 讀取集合層級資料, 使用onSnapshot方法(有監聽資料異動)
+          db.collection('products').onSnapshot((querySnapshot) => {
+            querySnapshot.forEach((item) => {
+              console.log('onSnapshot集合層級資料有異動:', item.id, JSON.stringify(item.data()));
+            });
+          });
+          // ● 讀取文件層級資料, 使用onSnapshot方法(有監聽資料異動)
+          docMobile.onSnapshot((doc) => {
+            console.log('onSnapshot文件層級資料有異動:::::', JSON.stringify(doc.data()));
+          });
+
+          // ● 讀取集合層級資料, 加上使用 篩選 where   參考: https://firebase.google.com/docs/firestore/query-data/queries#web_7
+          // 為了能夠體會 where 的作用,新建立一個cars的文件
+          db.collection('products').doc('cars').set({
+            BMW: {
+              z3: {
+                money: 99999
+              },
+              sun: 99999
+            },
+            total: 99999
+          });
+          // 找出文件的欄位中 total 大於等於 60000 的文件
+          db.collection('products').where('total', '>=', 60000).get().then((querySnapshot) => {
+            querySnapshot.forEach((item) => {
+              console.log('篩選 where:', item.id, item.data());
+            });
+          });
+
+          // ● 讀取集合層級資料, 加上使用 排序 orderBy, asc遞增 desc遞減, limit(n)限定資料筆數
+          // 為了能夠體會 limit 的作用,先建立一堆文件
+          ['aaa', 'bbb', 'ccc'].forEach((item, i) => {
+            db.collection('products').doc(item).set({
+              mockProduct: {
+                version: {
+                  money: (i+1)*1000
+                },
+                sun: (i+1)*1000
+              },
+              total: (i+1)*1000
+            });
+          });
+          db.collection('products').orderBy('total', 'asc').limit(4).get().then((querySnapshot) => {
+            querySnapshot.forEach((item) => {
+              console.log('排序 orderBy:', item.id, item.data());
+            });
+          });
+        */
+
+        function displayCollectionData(model) {
+          let temp = {};
+          model.forEach((item) => {
+            temp[item.id] = item.data();
+          });
+          $('#dbData-area').html(JSON.stringify(temp, null, '\v\v'));
+        }
+
+        // event: 取得當前db中 products 文件的資料
+        $('#getProductsDocBtn').click((event) => {
+          db.collection('products').get().then((querySnapshot) => {
+            displayCollectionData(querySnapshot);
+          });
+        });
+
+        // event: 取得當前db中 books 文件的資料
+        $('#getBooksDocBtn').click((event) => {
+          db.collection('books').get().then((querySnapshot) => {
+            displayCollectionData(querySnapshot);
           });
         });
 
 
-        // 以下實驗針對 book 這個文件做欄位新增修改刪除練習
+        // 以下實驗針對 books 這個文件做欄位新增修改刪除練習
         // event: 送出 set 新增與修改欄位 (有設定merge)
         $('#setBtn').click((event) => {
           var $textarea = $(event.target).prev();
           var val = JSON.parse($textarea.val().replace(/\r\n|\n/g,""));
-          var docBook = db.collection('products').doc('book');
+          var docBook = db.collection('books').doc('adobe');
           docBook.set(val, {merge: true});
         });
 
         // event: 送出 delete 刪除欄位
         $('#deleteBtn').click((event) => {
           var keyName = $(event.target).prev().val();
-          var docBook = db.collection('products').doc('book');
+          var docBook = db.collection('books').doc('adobe');
           docBook.update({
             [keyName]: firebase.firestore.FieldValue.delete()
           });
